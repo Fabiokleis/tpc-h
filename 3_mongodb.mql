@@ -1,0 +1,63 @@
+db.orders.aggregate([
+  {
+    $lookup: {
+      from: "customer",
+      localField: "o_custkey",
+      foreignField: "c_custkey",
+      as: "customer_info"
+    }
+  },
+  { $unwind: "$customer_info" },
+  {
+    $match: {
+      "customer_info.c_mktsegment": "BUILDING", 
+      o_orderdate: { $lt: new Date("1995-03-15T00:00:00.000Z") } 
+    }
+  },
+  {
+    $lookup: {
+      from: "lineitem",
+      localField: "o_orderkey",
+      foreignField: "l_orderkey",
+      as: "lineitems"
+    }
+  },
+  { $unwind: "$lineitems" },
+  {
+    $match: {
+      "lineitems.l_shipdate": { $gt: new Date("1995-03-15T00:00:00.000Z") }
+    }
+  },
+  {
+    $group: {
+      _id: {
+        l_orderkey: "$o_orderkey",
+        o_orderdate: "$o_orderdate",
+        o_shippriority: "$o_shippriority"
+      },
+      revenue: {
+        $sum: {
+          $multiply: [
+            "$lineitems.l_extendedprice",
+            { $subtract: [1, "$lineitems.l_discount"] }
+          ]
+        }
+      }
+    }
+  },
+  {
+    $sort: {
+      revenue: -1,
+      "_id.o_orderdate": 1 
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      l_orderkey: "$_id.l_orderkey",
+      revenue: 1,
+      o_orderdate: "$_id.o_orderdate",
+      o_shippriority: "$_id.o_shippriority"
+    }
+  }
+]).explain("executionStats")

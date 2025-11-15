@@ -1,0 +1,310 @@
+{
+    "explainVersion": "1",
+    "stages": [
+        {
+            "$cursor": {
+                "queryPlanner": {
+                    "namespace": "tpch.orders",
+                    "parsedQuery": {
+                        "o_orderdate": {
+                            "$lt": "1995-03-15T00:00:00.000Z"
+                        }
+                    },
+                    "indexFilterSet": false,
+                    "queryHash": "0298A8C8",
+                    "planCacheShapeHash": "0298A8C8",
+                    "planCacheKey": "9089B878",
+                    "optimizationTimeMillis": 0,
+                    "maxIndexedOrSolutionsReached": false,
+                    "maxIndexedAndSolutionsReached": false,
+                    "maxScansToExplodeReached": false,
+                    "prunedSimilarIndexes": false,
+                    "winningPlan": {
+                        "isCached": false,
+                        "stage": "PROJECTION_SIMPLE",
+                        "transformBy": {
+                            "o_custkey": 1,
+                            "o_orderdate": 1,
+                            "o_orderkey": 1,
+                            "o_shippriority": 1,
+                            "_id": 0
+                        },
+                        "inputStage": {
+                            "stage": "COLLSCAN",
+                            "filter": {
+                                "o_orderdate": {
+                                    "$lt": "1995-03-15T00:00:00.000Z"
+                                }
+                            },
+                            "direction": "forward"
+                        }
+                    },
+                    "rejectedPlans": []
+                },
+                "executionStats": {
+                    "executionSuccess": true,
+                    "nReturned": 0,
+                    "executionTimeMillis": 577,
+                    "totalKeysExamined": 0,
+                    "totalDocsExamined": 1499999,
+                    "executionStages": {
+                        "isCached": false,
+                        "stage": "PROJECTION_SIMPLE",
+                        "nReturned": 0,
+                        "executionTimeMillisEstimate": 550,
+                        "works": 1500000,
+                        "advanced": 0,
+                        "needTime": 1499999,
+                        "needYield": 0,
+                        "saveState": 30,
+                        "restoreState": 30,
+                        "isEOF": 1,
+                        "transformBy": {
+                            "o_custkey": 1,
+                            "o_orderdate": 1,
+                            "o_orderkey": 1,
+                            "o_shippriority": 1,
+                            "_id": 0
+                        },
+                        "inputStage": {
+                            "stage": "COLLSCAN",
+                            "filter": {
+                                "o_orderdate": {
+                                    "$lt": "1995-03-15T00:00:00.000Z"
+                                }
+                            },
+                            "nReturned": 0,
+                            "executionTimeMillisEstimate": 550,
+                            "works": 1500000,
+                            "advanced": 0,
+                            "needTime": 1499999,
+                            "needYield": 0,
+                            "saveState": 30,
+                            "restoreState": 30,
+                            "isEOF": 1,
+                            "direction": "forward",
+                            "docsExamined": 1499999
+                        }
+                    }
+                }
+            },
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 570
+        },
+        {
+            "$lookup": {
+                "from": "customer",
+                "as": "customer_info",
+                "localField": "o_custkey",
+                "foreignField": "c_custkey",
+                "let": {},
+                "pipeline": [
+                    {
+                        "$match": {
+                            "c_mktsegment": {
+                                "$eq": "BUILDING"
+                            }
+                        }
+                    }
+                ],
+                "unwinding": {
+                    "preserveNullAndEmptyArrays": false
+                }
+            },
+            "totalDocsExamined": 0,
+            "totalKeysExamined": 0,
+            "collectionScans": 0,
+            "indexesUsed": [],
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 570
+        },
+        {
+            "$lookup": {
+                "from": "lineitem",
+                "as": "lineitems",
+                "localField": "o_orderkey",
+                "foreignField": "l_orderkey",
+                "let": {},
+                "pipeline": [
+                    {
+                        "$match": {
+                            "l_shipdate": {
+                                "$gt": "1995-03-15T00:00:00.000Z"
+                            }
+                        }
+                    }
+                ],
+                "unwinding": {
+                    "preserveNullAndEmptyArrays": false
+                }
+            },
+            "totalDocsExamined": 0,
+            "totalKeysExamined": 0,
+            "collectionScans": 0,
+            "indexesUsed": [],
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 570
+        },
+        {
+            "$group": {
+                "_id": {
+                    "l_orderkey": "$o_orderkey",
+                    "o_orderdate": "$o_orderdate",
+                    "o_shippriority": "$o_shippriority"
+                },
+                "revenue": {
+                    "$sum": {
+                        "$multiply": [
+                            "$lineitems.l_extendedprice",
+                            {
+                                "$subtract": [
+                                    {
+                                        "$const": 1
+                                    },
+                                    "$lineitems.l_discount"
+                                ]
+                            }
+                        ]
+                    }
+                }
+            },
+            "maxAccumulatorMemoryUsageBytes": {
+                "revenue": 0
+            },
+            "totalOutputDataSizeBytes": 0,
+            "usedDisk": false,
+            "spills": 0,
+            "spilledDataStorageSize": 0,
+            "numBytesSpilledEstimate": 0,
+            "spilledRecords": 0,
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 570
+        },
+        {
+            "$sort": {
+                "sortKey": {
+                    "revenue": -1,
+                    "_id.o_orderdate": 1
+                }
+            },
+            "totalDataSizeSortedBytesEstimate": 0,
+            "usedDisk": false,
+            "spills": 0,
+            "spilledDataStorageSize": 0,
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 570
+        },
+        {
+            "$project": {
+                "revenue": true,
+                "l_orderkey": "$_id.l_orderkey",
+                "o_orderdate": "$_id.o_orderdate",
+                "o_shippriority": "$_id.o_shippriority",
+                "_id": false
+            },
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 570
+        }
+    ],
+    "queryShapeHash": "1E90118DBDB048361A63D015E7FAE902D58D53A2B90D5215132A0BD023FFC0CB",
+    "serverInfo": {
+        "host": "a45aa2ed912f",
+        "port": 27017,
+        "version": "8.0.13",
+        "gitVersion": "8dc5cd2a30c4524132e2d44bb314544dc477e611"
+    },
+    "serverParameters": {
+        "internalQueryFacetBufferSizeBytes": 104857600,
+        "internalQueryFacetMaxOutputDocSizeBytes": 104857600,
+        "internalLookupStageIntermediateDocumentMaxSizeBytes": 104857600,
+        "internalDocumentSourceGroupMaxMemoryBytes": 104857600,
+        "internalQueryMaxBlockingSortMemoryUsageBytes": 104857600,
+        "internalQueryProhibitBlockingMergeOnMongoS": 0,
+        "internalQueryMaxAddToSetBytes": 104857600,
+        "internalDocumentSourceSetWindowFieldsMaxMemoryBytes": 104857600,
+        "internalQueryFrameworkControl": "trySbeRestricted",
+        "internalQueryPlannerIgnoreIndexWithCollationForRegex": 1
+    },
+    "command": {
+        "aggregate": "orders",
+        "pipeline": [
+            {
+                "$lookup": {
+                    "from": "customer",
+                    "localField": "o_custkey",
+                    "foreignField": "c_custkey",
+                    "as": "customer_info"
+                }
+            },
+            {
+                "$unwind": "$customer_info"
+            },
+            {
+                "$match": {
+                    "customer_info.c_mktsegment": "BUILDING",
+                    "o_orderdate": {
+                        "$lt": "1995-03-15T00:00:00.000Z"
+                    }
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "lineitem",
+                    "localField": "o_orderkey",
+                    "foreignField": "l_orderkey",
+                    "as": "lineitems"
+                }
+            },
+            {
+                "$unwind": "$lineitems"
+            },
+            {
+                "$match": {
+                    "lineitems.l_shipdate": {
+                        "$gt": "1995-03-15T00:00:00.000Z"
+                    }
+                }
+            },
+            {
+                "$group": {
+                    "_id": {
+                        "l_orderkey": "$o_orderkey",
+                        "o_orderdate": "$o_orderdate",
+                        "o_shippriority": "$o_shippriority"
+                    },
+                    "revenue": {
+                        "$sum": {
+                            "$multiply": [
+                                "$lineitems.l_extendedprice",
+                                {
+                                    "$subtract": [
+                                        1,
+                                        "$lineitems.l_discount"
+                                    ]
+                                }
+                            ]
+                        }
+                    }
+                }
+            },
+            {
+                "$sort": {
+                    "revenue": -1,
+                    "_id.o_orderdate": 1
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "l_orderkey": "$_id.l_orderkey",
+                    "revenue": 1,
+                    "o_orderdate": "$_id.o_orderdate",
+                    "o_shippriority": "$_id.o_shippriority"
+                }
+            }
+        ],
+        "cursor": {},
+        "$db": "tpch"
+    },
+    "ok": 1
+}

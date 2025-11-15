@@ -1,0 +1,88 @@
+db.part.aggregate([
+  {
+    $match: {
+      p_size: 15,
+      p_type: { $regex: "STEEL$" } 
+    }
+  },
+  {
+    $lookup: {
+      from: "partsupp",
+      localField: "p_partkey",
+      foreignField: "ps_partkey",
+      as: "part_supplier_info"
+    }
+  },
+  { $unwind: "$part_supplier_info" },
+  {
+    $lookup: {
+      from: "supplier",
+      localField: "part_supplier_info.ps_suppkey",
+      foreignField: "s_suppkey",
+      as: "supplier_info"
+    }
+  },
+  { $unwind: "$supplier_info" },
+  {
+    $lookup: {
+      from: "nation",
+      localField: "supplier_info.s_nationkey",
+      foreignField: "n_nationkey",
+      as: "nation_info"
+    }
+  },
+  { $unwind: "$nation_info" },
+  {
+    $lookup: {
+      from: "region",
+      localField: "nation_info.n_regionkey",
+      foreignField: "r_regionkey",
+      as: "region_info"
+    }
+  },
+  { $unwind: "$region_info" },
+  {
+    $match: {
+      "region_info.r_name": "EUROPE"
+    }
+  },
+  {
+    $group: {
+      _id: "$p_partkey",
+      min_cost: { $min: "$part_supplier_info.ps_supplycost" },
+      data: { $push: "$$ROOT" }
+    }
+  },
+  { $unwind: "$data" },
+  {
+    $match: {
+      $expr: {
+        $eq: [
+          "$data.part_supplier_info.ps_supplycost",
+          "$min_cost"
+        ]
+      }
+    }
+  },
+  {
+    $project: {
+      _id: 0,
+      s_acctbal: "$data.supplier_info.s_acctbal",
+      s_name: "$data.supplier_info.s_name",
+      n_name: "$data.nation_info.n_name",
+      p_partkey: "$data.p_partkey",
+      p_mfgr: "$data.p_mfgr",
+      s_address: "$data.supplier_info.s_address",
+      s_phone: "$data.supplier_info.s_phone",
+      s_comment: "$data.supplier_info.s_comment"
+    }
+  },
+  {
+    $sort: {
+      s_acctbal: -1,
+      n_name: 1,
+      s_name: 1,
+      p_partkey: 1
+    }
+  }
+]).explain("executionStats")

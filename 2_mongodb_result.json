@@ -1,0 +1,365 @@
+{
+    "explainVersion": "1",
+    "stages": [
+        {
+            "$cursor": {
+                "queryPlanner": {
+                    "namespace": "tpch.part",
+                    "parsedQuery": {
+                        "$and": [
+                            {
+                                "p_size": {
+                                    "$eq": 15
+                                }
+                            },
+                            {
+                                "p_type": "BSONRegExp('STEEL$', '')"
+                            }
+                        ]
+                    },
+                    "indexFilterSet": false,
+                    "queryHash": "B04D671E",
+                    "planCacheShapeHash": "B04D671E",
+                    "planCacheKey": "60337BDE",
+                    "optimizationTimeMillis": 0,
+                    "maxIndexedOrSolutionsReached": false,
+                    "maxIndexedAndSolutionsReached": false,
+                    "maxScansToExplodeReached": false,
+                    "prunedSimilarIndexes": false,
+                    "winningPlan": {
+                        "isCached": false,
+                        "stage": "COLLSCAN",
+                        "filter": {
+                            "$and": [
+                                {
+                                    "p_size": {
+                                        "$eq": 15
+                                    }
+                                },
+                                {
+                                    "p_type": "BSONRegExp('STEEL$', '')"
+                                }
+                            ]
+                        },
+                        "direction": "forward"
+                    },
+                    "rejectedPlans": []
+                },
+                "executionStats": {
+                    "executionSuccess": true,
+                    "nReturned": 0,
+                    "executionTimeMillis": 58,
+                    "totalKeysExamined": 0,
+                    "totalDocsExamined": 199999,
+                    "executionStages": {
+                        "isCached": false,
+                        "stage": "COLLSCAN",
+                        "filter": {
+                            "$and": [
+                                {
+                                    "p_size": {
+                                        "$eq": 15
+                                    }
+                                },
+                                {
+                                    "p_type": "BSONRegExp('STEEL$', '')"
+                                }
+                            ]
+                        },
+                        "nReturned": 0,
+                        "executionTimeMillisEstimate": 50,
+                        "works": 200000,
+                        "advanced": 0,
+                        "needTime": 199999,
+                        "needYield": 0,
+                        "saveState": 3,
+                        "restoreState": 3,
+                        "isEOF": 1,
+                        "direction": "forward",
+                        "docsExamined": 199999
+                    }
+                }
+            },
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 50
+        },
+        {
+            "$lookup": {
+                "from": "partsupp",
+                "as": "part_supplier_info",
+                "localField": "p_partkey",
+                "foreignField": "ps_partkey",
+                "unwinding": {
+                    "preserveNullAndEmptyArrays": false
+                }
+            },
+            "totalDocsExamined": 0,
+            "totalKeysExamined": 0,
+            "collectionScans": 0,
+            "indexesUsed": [],
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 50
+        },
+        {
+            "$lookup": {
+                "from": "supplier",
+                "as": "supplier_info",
+                "localField": "part_supplier_info.ps_suppkey",
+                "foreignField": "s_suppkey",
+                "unwinding": {
+                    "preserveNullAndEmptyArrays": false
+                }
+            },
+            "totalDocsExamined": 0,
+            "totalKeysExamined": 0,
+            "collectionScans": 0,
+            "indexesUsed": [],
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 50
+        },
+        {
+            "$lookup": {
+                "from": "nation",
+                "as": "nation_info",
+                "localField": "supplier_info.s_nationkey",
+                "foreignField": "n_nationkey",
+                "unwinding": {
+                    "preserveNullAndEmptyArrays": false
+                }
+            },
+            "totalDocsExamined": 0,
+            "totalKeysExamined": 0,
+            "collectionScans": 0,
+            "indexesUsed": [],
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 50
+        },
+        {
+            "$lookup": {
+                "from": "region",
+                "as": "region_info",
+                "localField": "nation_info.n_regionkey",
+                "foreignField": "r_regionkey",
+                "let": {},
+                "pipeline": [
+                    {
+                        "$match": {
+                            "r_name": {
+                                "$eq": "EUROPE"
+                            }
+                        }
+                    }
+                ],
+                "unwinding": {
+                    "preserveNullAndEmptyArrays": false
+                }
+            },
+            "totalDocsExamined": 0,
+            "totalKeysExamined": 0,
+            "collectionScans": 0,
+            "indexesUsed": [],
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 50
+        },
+        {
+            "$group": {
+                "_id": "$p_partkey",
+                "min_cost": {
+                    "$min": "$part_supplier_info.ps_supplycost"
+                },
+                "data": {
+                    "$push": "$$ROOT"
+                }
+            },
+            "maxAccumulatorMemoryUsageBytes": {
+                "min_cost": 0,
+                "data": 0
+            },
+            "totalOutputDataSizeBytes": 0,
+            "usedDisk": false,
+            "spills": 0,
+            "spilledDataStorageSize": 0,
+            "numBytesSpilledEstimate": 0,
+            "spilledRecords": 0,
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 50
+        },
+        {
+            "$unwind": {
+                "path": "$data"
+            },
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 50
+        },
+        {
+            "$match": {
+                "$expr": {
+                    "$eq": [
+                        "$data.part_supplier_info.ps_supplycost",
+                        "$min_cost"
+                    ]
+                }
+            },
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 50
+        },
+        {
+            "$project": {
+                "s_acctbal": "$data.supplier_info.s_acctbal",
+                "s_name": "$data.supplier_info.s_name",
+                "n_name": "$data.nation_info.n_name",
+                "p_partkey": "$data.p_partkey",
+                "p_mfgr": "$data.p_mfgr",
+                "s_address": "$data.supplier_info.s_address",
+                "s_phone": "$data.supplier_info.s_phone",
+                "s_comment": "$data.supplier_info.s_comment",
+                "_id": false
+            },
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 50
+        },
+        {
+            "$sort": {
+                "sortKey": {
+                    "s_acctbal": -1,
+                    "n_name": 1,
+                    "s_name": 1,
+                    "p_partkey": 1
+                }
+            },
+            "totalDataSizeSortedBytesEstimate": 0,
+            "usedDisk": false,
+            "spills": 0,
+            "spilledDataStorageSize": 0,
+            "nReturned": 0,
+            "executionTimeMillisEstimate": 50
+        }
+    ],
+    "queryShapeHash": "9379C88F6AF7011EB02798835BACAD114F13888ED475CC9C944E7B5D7B16C9EF",
+    "serverInfo": {
+        "host": "a45aa2ed912f",
+        "port": 27017,
+        "version": "8.0.13",
+        "gitVersion": "8dc5cd2a30c4524132e2d44bb314544dc477e611"
+    },
+    "serverParameters": {
+        "internalQueryFacetBufferSizeBytes": 104857600,
+        "internalQueryFacetMaxOutputDocSizeBytes": 104857600,
+        "internalLookupStageIntermediateDocumentMaxSizeBytes": 104857600,
+        "internalDocumentSourceGroupMaxMemoryBytes": 104857600,
+        "internalQueryMaxBlockingSortMemoryUsageBytes": 104857600,
+        "internalQueryProhibitBlockingMergeOnMongoS": 0,
+        "internalQueryMaxAddToSetBytes": 104857600,
+        "internalDocumentSourceSetWindowFieldsMaxMemoryBytes": 104857600,
+        "internalQueryFrameworkControl": "trySbeRestricted",
+        "internalQueryPlannerIgnoreIndexWithCollationForRegex": 1
+    },
+    "command": {
+        "aggregate": "part",
+        "pipeline": [
+            {
+                "$match": {
+                    "p_size": 15,
+                    "p_type": "BSONRegExp('STEEL$', '')"
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "partsupp",
+                    "localField": "p_partkey",
+                    "foreignField": "ps_partkey",
+                    "as": "part_supplier_info"
+                }
+            },
+            {
+                "$unwind": "$part_supplier_info"
+            },
+            {
+                "$lookup": {
+                    "from": "supplier",
+                    "localField": "part_supplier_info.ps_suppkey",
+                    "foreignField": "s_suppkey",
+                    "as": "supplier_info"
+                }
+            },
+            {
+                "$unwind": "$supplier_info"
+            },
+            {
+                "$lookup": {
+                    "from": "nation",
+                    "localField": "supplier_info.s_nationkey",
+                    "foreignField": "n_nationkey",
+                    "as": "nation_info"
+                }
+            },
+            {
+                "$unwind": "$nation_info"
+            },
+            {
+                "$lookup": {
+                    "from": "region",
+                    "localField": "nation_info.n_regionkey",
+                    "foreignField": "r_regionkey",
+                    "as": "region_info"
+                }
+            },
+            {
+                "$unwind": "$region_info"
+            },
+            {
+                "$match": {
+                    "region_info.r_name": "EUROPE"
+                }
+            },
+            {
+                "$group": {
+                    "_id": "$p_partkey",
+                    "min_cost": {
+                        "$min": "$part_supplier_info.ps_supplycost"
+                    },
+                    "data": {
+                        "$push": "$$ROOT"
+                    }
+                }
+            },
+            {
+                "$unwind": "$data"
+            },
+            {
+                "$match": {
+                    "$expr": {
+                        "$eq": [
+                            "$data.part_supplier_info.ps_supplycost",
+                            "$min_cost"
+                        ]
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "s_acctbal": "$data.supplier_info.s_acctbal",
+                    "s_name": "$data.supplier_info.s_name",
+                    "n_name": "$data.nation_info.n_name",
+                    "p_partkey": "$data.p_partkey",
+                    "p_mfgr": "$data.p_mfgr",
+                    "s_address": "$data.supplier_info.s_address",
+                    "s_phone": "$data.supplier_info.s_phone",
+                    "s_comment": "$data.supplier_info.s_comment"
+                }
+            },
+            {
+                "$sort": {
+                    "s_acctbal": -1,
+                    "n_name": 1,
+                    "s_name": 1,
+                    "p_partkey": 1
+                }
+            }
+        ],
+        "cursor": {},
+        "$db": "tpch"
+    },
+    "ok": 1
+}

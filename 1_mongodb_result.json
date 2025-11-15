@@ -1,0 +1,342 @@
+{
+    "explainVersion": "2",
+    "stages": [
+        {
+            "$cursor": {
+                "queryPlanner": {
+                    "namespace": "tpch.lineitem",
+                    "parsedQuery": {
+                        "L_SHIPDATE": {
+                            "$lte": "1998-09-02"
+                        }
+                    },
+                    "indexFilterSet": false,
+                    "queryHash": "31A564EC",
+                    "planCacheShapeHash": "31A564EC",
+                    "planCacheKey": "7E5230C4",
+                    "optimizationTimeMillis": 0,
+                    "maxIndexedOrSolutionsReached": false,
+                    "maxIndexedAndSolutionsReached": false,
+                    "maxScansToExplodeReached": false,
+                    "prunedSimilarIndexes": false,
+                    "winningPlan": {
+                        "isCached": false,
+                        "queryPlan": {
+                            "stage": "GROUP",
+                            "planNodeId": 3,
+                            "inputStage": {
+                                "stage": "COLLSCAN",
+                                "planNodeId": 1,
+                                "filter": {
+                                    "L_SHIPDATE": {
+                                        "$lte": "1998-09-02"
+                                    }
+                                },
+                                "direction": "forward"
+                            }
+                        },
+                        "slotBasedPlan": {
+                            "slots": "$$RESULT=s41 env: {  }",
+                            "stages": "[3] project [s41 = newObj(\"_id\", s32, \"sum_qty\", s33, \"sum_base_price\", s34, \"sum_disc_price\", s35, \"sum_charge\", s36, \"avg_qty\", s37, \"avg_price\", s38, \"avg_disc\", s39, \"count_order\", s40)] \n[3] project [s32 = newObj(\"l_returnflag\", s5, \"l_linestatus\", s3), s33 = doubleDoubleSumFinalize(s21), s34 = doubleDoubleSumFinalize(s22), s35 = doubleDoubleSumFinalize(s23), s36 = doubleDoubleSumFinalize(s24), s37 = \n    if (s26 == 0ll) \n    then null \n    else (doubleDoubleSumFinalize(s25) / s26) \n, s38 = \n    if (s28 == 0ll) \n    then null \n    else (doubleDoubleSumFinalize(s27) / s28) \n, s39 = \n    if (s30 == 0ll) \n    then null \n    else (doubleDoubleSumFinalize(s29) / s30) \n, s40 = (convert ( s31, int32) ?: s31)] \n[3] group [s5, s3] [s21 = aggDoubleDoubleSum(s4), s22 = aggDoubleDoubleSum(s2), s23 = aggDoubleDoubleSum(\n    let [\n        l17.0 = \n            if (typeMatch(s1, 1088) ?: true) \n            then null \n            else \n                if isNumber(s1) \n                then (1 - s1) \n                else fail(7157720, \"Only numbers and dates are allowed in an $subtract expression. To subtract a number from a date, the date must be the first argument.\") \n    ] \n    in \n        if ((typeMatch(s2, 1088) ?: true) || (typeMatch(l17.0, 1088) ?: true)) \n        then null \n        else \n            if (isNumber(s2) && isNumber(l17.0)) \n            then (s2 * move(l17.0)) \n            else fail(7157721, \"only numbers are allowed in an $multiply expression\") \n), s24 = aggDoubleDoubleSum(\n    let [\n        l18.0 = \n            if (typeMatch(s6, 1088) ?: true) \n            then null \n            else \n                if ((0 + \n                    if isNumber(s6) \n                    then 0 \n                    else \n                        if isDate(s6) \n                        then 1 \n                        else fail(7157723, \"only numbers and dates are allowed in an $add expression\") \n               ) > 1) \n                then fail(7157722, \"only one date allowed in an $add expression\") \n                else (1 + s6) \n    ] \n    in \n        let [\n            l19.0 = \n                if (typeMatch(s1, 1088) ?: true) \n                then null \n                else \n                    if isNumber(s1) \n                    then (1 - s1) \n                    else fail(7157720, \"Only numbers and dates are allowed in an $subtract expression. To subtract a number from a date, the date must be the first argument.\") \n        ] \n        in \n            if ((typeMatch(s2, 1088) ?: true) || ((typeMatch(l19.0, 1088) ?: true) || (typeMatch(l18.0, 1088) ?: true))) \n            then null \n            else \n                if (isNumber(s2) && (isNumber(l19.0) && isNumber(l18.0))) \n                then ((s2 * move(l19.0)) * move(l18.0)) \n                else fail(7157721, \"only numbers are allowed in an $multiply expression\") \n), s25 = aggDoubleDoubleSum(s4), s26 = sum(\n    if ((typeMatch(s4, 1088) ?: true) || !(isNumber(s4))) \n    then 0ll \n    else 1ll \n), s27 = aggDoubleDoubleSum(s2), s28 = sum(\n    if ((typeMatch(s2, 1088) ?: true) || !(isNumber(s2))) \n    then 0ll \n    else 1ll \n), s29 = aggDoubleDoubleSum(s1), s30 = sum(\n    if ((typeMatch(s1, 1088) ?: true) || !(isNumber(s1))) \n    then 0ll \n    else 1ll \n), s31 = count()] spillSlots[s10, s11, s12, s13, s14, s15, s16, s17, s18, s19, s20] mergingExprs[aggMergeDoubleDoubleSums(s10), aggMergeDoubleDoubleSums(s11), aggMergeDoubleDoubleSums(s12), aggMergeDoubleDoubleSums(s13), aggMergeDoubleDoubleSums(s14), sum(s15), aggMergeDoubleDoubleSums(s16), sum(s17), aggMergeDoubleDoubleSums(s18), sum(s19), sum(s20)] \n[1] filter {traverseF(s7, lambda(l2.0) { ((move(l2.0) <= \"1998-09-02\") ?: false) }, false)} \n[1] scan s8 s9 none none none none none none lowPriority [s1 = L_DISCOUNT, s2 = L_EXTENDEDPRICE, s3 = L_LINESTATUS, s4 = L_QUANTITY, s5 = L_RETURNFLAG, s6 = L_TAX, s7 = L_SHIPDATE] @\"84cda1e6-1cd9-4da8-8c43-e14e7f2f31d5\" true false "
+                        }
+                    },
+                    "rejectedPlans": []
+                },
+                "executionStats": {
+                    "executionSuccess": true,
+                    "nReturned": 4,
+                    "executionTimeMillis": 7031,
+                    "totalKeysExamined": 0,
+                    "totalDocsExamined": 6001215,
+                    "executionStages": {
+                        "stage": "project",
+                        "planNodeId": 3,
+                        "nReturned": 4,
+                        "executionTimeMillisEstimate": 7028,
+                        "opens": 1,
+                        "closes": 1,
+                        "saveState": 354,
+                        "restoreState": 354,
+                        "isEOF": 1,
+                        "projections": {
+                            "41": "newObj(\"_id\", s32, \"sum_qty\", s33, \"sum_base_price\", s34, \"sum_disc_price\", s35, \"sum_charge\", s36, \"avg_qty\", s37, \"avg_price\", s38, \"avg_disc\", s39, \"count_order\", s40) "
+                        },
+                        "inputStage": {
+                            "stage": "project",
+                            "planNodeId": 3,
+                            "nReturned": 4,
+                            "executionTimeMillisEstimate": 7028,
+                            "opens": 1,
+                            "closes": 1,
+                            "saveState": 354,
+                            "restoreState": 354,
+                            "isEOF": 1,
+                            "projections": {
+                                "32": "newObj(\"l_returnflag\", s5, \"l_linestatus\", s3) ",
+                                "33": "doubleDoubleSumFinalize(s21) ",
+                                "34": "doubleDoubleSumFinalize(s22) ",
+                                "35": "doubleDoubleSumFinalize(s23) ",
+                                "36": "doubleDoubleSumFinalize(s24) ",
+                                "37": "\n    if (s26 == 0ll) \n    then null \n    else (doubleDoubleSumFinalize(s25) / s26) \n",
+                                "38": "\n    if (s28 == 0ll) \n    then null \n    else (doubleDoubleSumFinalize(s27) / s28) \n",
+                                "39": "\n    if (s30 == 0ll) \n    then null \n    else (doubleDoubleSumFinalize(s29) / s30) \n",
+                                "40": "(convert ( s31, int32) ?: s31) "
+                            },
+                            "inputStage": {
+                                "stage": "group",
+                                "planNodeId": 3,
+                                "nReturned": 4,
+                                "executionTimeMillisEstimate": 7028,
+                                "opens": 1,
+                                "closes": 1,
+                                "saveState": 354,
+                                "restoreState": 354,
+                                "isEOF": 1,
+                                "groupBySlots": [
+                                    5,
+                                    3
+                                ],
+                                "expressions": {
+                                    "21": "aggDoubleDoubleSum(s4) ",
+                                    "22": "aggDoubleDoubleSum(s2) ",
+                                    "23": "aggDoubleDoubleSum(\n    let [\n        l17.0 = \n            if (typeMatch(s1, 1088) ?: true) \n            then null \n            else \n                if isNumber(s1) \n                then (1 - s1) \n                else fail(7157720, \"Only numbers and dates are allowed in an $subtract expression. To subtract a number from a date, the date must be the first argument.\") \n    ] \n    in \n        if ((typeMatch(s2, 1088) ?: true) || (typeMatch(l17.0, 1088) ?: true)) \n        then null \n        else \n            if (isNumber(s2) && isNumber(l17.0)) \n            then (s2 * move(l17.0)) \n            else fail(7157721, \"only numbers are allowed in an $multiply expression\") \n) ",
+                                    "24": "aggDoubleDoubleSum(\n    let [\n        l18.0 = \n            if (typeMatch(s6, 1088) ?: true) \n            then null \n            else \n                if ((0 + \n                    if isNumber(s6) \n                    then 0 \n                    else \n                        if isDate(s6) \n                        then 1 \n                        else fail(7157723, \"only numbers and dates are allowed in an $add expression\") \n               ) > 1) \n                then fail(7157722, \"only one date allowed in an $add expression\") \n                else (1 + s6) \n    ] \n    in \n        let [\n            l19.0 = \n                if (typeMatch(s1, 1088) ?: true) \n                then null \n                else \n                    if isNumber(s1) \n                    then (1 - s1) \n                    else fail(7157720, \"Only numbers and dates are allowed in an $subtract expression. To subtract a number from a date, the date must be the first argument.\") \n        ] \n        in \n            if ((typeMatch(s2, 1088) ?: true) || ((typeMatch(l19.0, 1088) ?: true) || (typeMatch(l18.0, 1088) ?: true))) \n            then null \n            else \n                if (isNumber(s2) && (isNumber(l19.0) && isNumber(l18.0))) \n                then ((s2 * move(l19.0)) * move(l18.0)) \n                else fail(7157721, \"only numbers are allowed in an $multiply expression\") \n) ",
+                                    "25": "aggDoubleDoubleSum(s4) ",
+                                    "26": "sum(\n    if ((typeMatch(s4, 1088) ?: true) || !(isNumber(s4))) \n    then 0ll \n    else 1ll \n) ",
+                                    "27": "aggDoubleDoubleSum(s2) ",
+                                    "28": "sum(\n    if ((typeMatch(s2, 1088) ?: true) || !(isNumber(s2))) \n    then 0ll \n    else 1ll \n) ",
+                                    "29": "aggDoubleDoubleSum(s1) ",
+                                    "30": "sum(\n    if ((typeMatch(s1, 1088) ?: true) || !(isNumber(s1))) \n    then 0ll \n    else 1ll \n) ",
+                                    "31": "count() ",
+                                    "initExprs": {
+                                        "21": null,
+                                        "22": null,
+                                        "23": null,
+                                        "24": null,
+                                        "25": null,
+                                        "26": null,
+                                        "27": null,
+                                        "28": null,
+                                        "29": null,
+                                        "30": null,
+                                        "31": null
+                                    }
+                                },
+                                "mergingExprs": {
+                                    "10": "aggMergeDoubleDoubleSums(s10) ",
+                                    "11": "aggMergeDoubleDoubleSums(s11) ",
+                                    "12": "aggMergeDoubleDoubleSums(s12) ",
+                                    "13": "aggMergeDoubleDoubleSums(s13) ",
+                                    "14": "aggMergeDoubleDoubleSums(s14) ",
+                                    "15": "sum(s15) ",
+                                    "16": "aggMergeDoubleDoubleSums(s16) ",
+                                    "17": "sum(s17) ",
+                                    "18": "aggMergeDoubleDoubleSums(s18) ",
+                                    "19": "sum(s19) ",
+                                    "20": "sum(s20) "
+                                },
+                                "usedDisk": false,
+                                "spills": 0,
+                                "spilledBytes": 0,
+                                "spilledRecords": 0,
+                                "spilledDataStorageSize": 0,
+                                "inputStage": {
+                                    "stage": "filter",
+                                    "planNodeId": 1,
+                                    "nReturned": 5916591,
+                                    "executionTimeMillisEstimate": 2268,
+                                    "opens": 1,
+                                    "closes": 1,
+                                    "saveState": 354,
+                                    "restoreState": 354,
+                                    "isEOF": 1,
+                                    "numTested": 6001215,
+                                    "filter": "traverseF(s7, lambda(l2.0) { ((move(l2.0) <= \"1998-09-02\") ?: false) }, false) ",
+                                    "inputStage": {
+                                        "stage": "scan",
+                                        "planNodeId": 1,
+                                        "nReturned": 6001215,
+                                        "executionTimeMillisEstimate": 1958,
+                                        "opens": 1,
+                                        "closes": 1,
+                                        "saveState": 354,
+                                        "restoreState": 354,
+                                        "isEOF": 1,
+                                        "numReads": 6001215,
+                                        "recordSlot": 8,
+                                        "recordIdSlot": 9,
+                                        "scanFieldNames": [
+                                            "L_DISCOUNT",
+                                            "L_EXTENDEDPRICE",
+                                            "L_LINESTATUS",
+                                            "L_QUANTITY",
+                                            "L_RETURNFLAG",
+                                            "L_TAX",
+                                            "L_SHIPDATE"
+                                        ],
+                                        "scanFieldSlots": [
+                                            1,
+                                            2,
+                                            3,
+                                            4,
+                                            5,
+                                            6,
+                                            7
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    "allPlansExecution": []
+                }
+            },
+            "nReturned": 4,
+            "executionTimeMillisEstimate": 7030
+        },
+        {
+            "$project": {
+                "l_returnflag": "$_id.l_returnflag",
+                "l_linestatus": "$_id.l_linestatus",
+                "sum_qty": "$sum_qty",
+                "sum_base_price": "$sum_base_price",
+                "sum_disc_price": "$sum_disc_price",
+                "sum_charge": "$sum_charge",
+                "avg_qty": "$avg_qty",
+                "avg_price": "$avg_price",
+                "avg_disc": "$avg_disc",
+                "count_order": "$count_order",
+                "_id": false
+            },
+            "nReturned": 4,
+            "executionTimeMillisEstimate": 7030
+        },
+        {
+            "$sort": {
+                "sortKey": {
+                    "l_returnflag": 1,
+                    "l_linestatus": 1
+                }
+            },
+            "totalDataSizeSortedBytesEstimate": 2836,
+            "usedDisk": false,
+            "spills": 0,
+            "spilledDataStorageSize": 0,
+            "nReturned": 4,
+            "executionTimeMillisEstimate": 7030
+        }
+    ],
+    "queryShapeHash": "7A2DF073F51D34153D70FB94EEE67E2ABEC239D67BB9CACE6AA61BFD2D69AF8B",
+    "serverInfo": {
+        "host": "a45aa2ed912f",
+        "port": 27017,
+        "version": "8.0.13",
+        "gitVersion": "8dc5cd2a30c4524132e2d44bb314544dc477e611"
+    },
+    "serverParameters": {
+        "internalQueryFacetBufferSizeBytes": 104857600,
+        "internalQueryFacetMaxOutputDocSizeBytes": 104857600,
+        "internalLookupStageIntermediateDocumentMaxSizeBytes": 104857600,
+        "internalDocumentSourceGroupMaxMemoryBytes": 104857600,
+        "internalQueryMaxBlockingSortMemoryUsageBytes": 104857600,
+        "internalQueryProhibitBlockingMergeOnMongoS": 0,
+        "internalQueryMaxAddToSetBytes": 104857600,
+        "internalDocumentSourceSetWindowFieldsMaxMemoryBytes": 104857600,
+        "internalQueryFrameworkControl": "trySbeRestricted",
+        "internalQueryPlannerIgnoreIndexWithCollationForRegex": 1
+    },
+    "command": {
+        "aggregate": "lineitem",
+        "pipeline": [
+            {
+                "$match": {
+                    "L_SHIPDATE": {
+                        "$lte": "1998-09-02"
+                    }
+                }
+            },
+            {
+                "$group": {
+                    "_id": {
+                        "l_returnflag": "$L_RETURNFLAG",
+                        "l_linestatus": "$L_LINESTATUS"
+                    },
+                    "sum_qty": {
+                        "$sum": "$L_QUANTITY"
+                    },
+                    "sum_base_price": {
+                        "$sum": "$L_EXTENDEDPRICE"
+                    },
+                    "sum_disc_price": {
+                        "$sum": {
+                            "$multiply": [
+                                "$L_EXTENDEDPRICE",
+                                {
+                                    "$subtract": [
+                                        1,
+                                        "$L_DISCOUNT"
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    "sum_charge": {
+                        "$sum": {
+                            "$multiply": [
+                                "$L_EXTENDEDPRICE",
+                                {
+                                    "$subtract": [
+                                        1,
+                                        "$L_DISCOUNT"
+                                    ]
+                                },
+                                {
+                                    "$add": [
+                                        1,
+                                        "$L_TAX"
+                                    ]
+                                }
+                            ]
+                        }
+                    },
+                    "avg_qty": {
+                        "$avg": "$L_QUANTITY"
+                    },
+                    "avg_price": {
+                        "$avg": "$L_EXTENDEDPRICE"
+                    },
+                    "avg_disc": {
+                        "$avg": "$L_DISCOUNT"
+                    },
+                    "count_order": {
+                        "$sum": 1
+                    }
+                }
+            },
+            {
+                "$project": {
+                    "_id": 0,
+                    "l_returnflag": "$_id.l_returnflag",
+                    "l_linestatus": "$_id.l_linestatus",
+                    "sum_qty": "$sum_qty",
+                    "sum_base_price": "$sum_base_price",
+                    "sum_disc_price": "$sum_disc_price",
+                    "sum_charge": "$sum_charge",
+                    "avg_qty": "$avg_qty",
+                    "avg_price": "$avg_price",
+                    "avg_disc": "$avg_disc",
+                    "count_order": "$count_order"
+                }
+            },
+            {
+                "$sort": {
+                    "l_returnflag": 1,
+                    "l_linestatus": 1
+                }
+            }
+        ],
+        "cursor": {},
+        "$db": "tpch"
+    },
+    "ok": 1
+}
